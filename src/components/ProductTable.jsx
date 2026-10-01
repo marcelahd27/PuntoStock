@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
+export const ProductTable = ({ products, onEdit }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMarca, setSelectedMarca] = useState('Todas');
   const [selectedCalidad, setSelectedCalidad] = useState('Todas');
@@ -72,7 +72,7 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
         </div>
       </div>
 
-      {/* Tabla limpia enfocada en los datos clave (Sin Estado ni Acciones) */}
+      {/* Tabla con control de stock automatizado (Sin botones manuales) */}
       <div className="table-responsive">
         <table className="custom-table">
           <thead>
@@ -82,7 +82,7 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
               <th>Calidad</th>
               <th>Ubicación Bodega</th>
               <th>Precio ($)</th>
-              <th>Stock</th>
+              <th>Stock Disponible</th>
             </tr>
           </thead>
           <tbody>
@@ -98,13 +98,8 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
                   <tr 
                     key={product.id}
                     className="table-row-clickable"
-                    onClick={(e) => {
-                      // Solo abrir modal de editar si no se hace clic en los botones de + o -
-                      if (!e.target.classList.contains('btn-stock-quick')) {
-                        onEdit(product);
-                      }
-                    }}
-                    title="Haz clic en la fila para editar este repuesto"
+                    onClick={() => onEdit(product)}
+                    title="Haz clic en la fila para editar el repuesto"
                   >
                     <td>
                       <span className="brand-tag">{product.marca}</span>
@@ -122,25 +117,10 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
                       ${Number(product.precio).toFixed(2)}
                     </td>
                     <td>
-                      <div className="stock-control" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          className="btn-stock-quick"
-                          onClick={() => onUpdateStock(product.id, -1)}
-                          title="Descontar 1 unidad"
-                        >
-                          -
-                        </button>
-                        <span className={`stock-number ${product.stock <= 0 ? 'text-red' : ''}`}>
-                          {product.stock}
-                        </span>
-                        <button
-                          className="btn-stock-quick"
-                          onClick={() => onUpdateStock(product.id, 1)}
-                          title="Sumar 1 unidad"
-                        >
-                          +
-                        </button>
-                      </div>
+                      {/* Mostrar número de stock protegido. Si es 0 se muestra en rojo */}
+                      <span className={`stock-display ${product.stock <= 0 ? 'stock-zero' : 'stock-ok'}`}>
+                        {product.stock} {product.stock === 1 ? 'unidad' : 'unidades'}
+                      </span>
                     </td>
                   </tr>
                 );

@@ -52,21 +52,8 @@ export default function App() {
     }
   };
 
-  const handleUpdateStock = (id, delta) => {
-    const updated = products.map((p) => {
-      if (p.id === id) {
-        const newStock = Math.max(0, Number(p.stock) + delta);
-        return { ...p, stock: newStock, fechaActualizacion: new Date().toISOString() };
-      }
-      return p;
-    });
-    setProducts(updated);
-    saveProducts(updated);
-  };
-
-  // Procesar una Nueva Venta (Facturación Caja 3 + Descuento automático de Bodega)
+  // Procesar Venta: Descuento AUTOMÁTICO de Stock en Tiempo Real + Registro en Caja 3
   const handleCompleteSale = (saleRecord) => {
-    // 1. Descontar las cantidades de stock de los productos involucrados
     let updatedProducts = [...products];
 
     saleRecord.items.forEach((item) => {
@@ -82,12 +69,11 @@ export default function App() {
     setProducts(updatedProducts);
     saveProducts(updatedProducts);
 
-    // 2. Registrar la venta en la Caja 3
     const updatedSales = [saleRecord, ...sales];
     setSales(updatedSales);
     saveSales(updatedSales);
 
-    alert(`✅ Venta registrada exitosamente en Caja 3.\nFacturado a: ${saleRecord.clienteNombre}\nTotal: $${saleRecord.total.toFixed(2)}\nStock en bodega actualizado.`);
+    alert(`✅ Venta registrada en Caja 3.\nFacturado a: ${saleRecord.clienteNombre}\nTotal: $${saleRecord.total.toFixed(2)}\nEl stock fue descontado automáticamente en tiempo real.`);
   };
 
   return (
@@ -125,7 +111,6 @@ export default function App() {
           products={products}
           onEdit={(prod) => { setEditingProduct(prod); setIsProductModalOpen(true); }}
           onDelete={handleDeleteProduct}
-          onUpdateStock={handleUpdateStock}
         />
       </main>
 
