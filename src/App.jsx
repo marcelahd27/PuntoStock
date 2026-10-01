@@ -1,32 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { getProducts, saveProducts } from './utils/storage';
+import { getProducts, saveProducts, getSales, saveSales } from './utils/storage';
 import { StatsCards } from './components/StatsCards';
 import { ProductTable } from './components/ProductTable';
 import { ProductModal } from './components/ProductModal';
+import { NewSaleModal } from './components/NewSaleModal';
+import { Caja3ReportModal } from './components/Caja3ReportModal';
 
 export default function App() {
   const [products, setProducts] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sales, setSales] = useState([]);
+  
+  // Modales
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isSaleModalOpen, setIsSaleModalOpen] = useState(false);
+  const [isCaja3ReportOpen, setIsCaja3ReportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  // Cargar productos al iniciar la aplicación desde localStorage
   useEffect(() => {
-    const data = getProducts();
-    setProducts(data);
+    setProducts(getProducts());
+    setSales(getSales());
   }, []);
 
-  // Guardar en localStorage cada vez que la lista de productos cambie
+  // Guardar o Editar Repuesto en Inventario
   const handleSaveProduct = (productData) => {
     let updatedProducts;
     if (editingProduct) {
-      // Actualizar producto existente
       updatedProducts = products.map((p) =>
         p.id === editingProduct.id
           ? { ...p, ...productData, fechaActualizacion: new Date().toISOString() }
           : p
       );
     } else {
-      // Crear nuevo producto
       const newProduct = {
         ...productData,
         id: Date.now().toString(),
@@ -40,16 +44,14 @@ export default function App() {
     setEditingProduct(null);
   };
 
-  // Eliminar un producto por ID
   const handleDeleteProduct = (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este producto?')) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este repuesto del sistema?')) {
       const updated = products.filter((p) => p.id !== id);
       setProducts(updated);
       saveProducts(updated);
     }
   };
 
-  // Ajuste rápido de stock (+1 o -1)
   const handleUpdateStock = (id, delta) => {
     const updated = products.map((p) => {
       if (p.id === id) {
@@ -62,14 +64,30 @@ export default function App() {
     saveProducts(updated);
   };
 
-  const handleOpenAddModal = () => {
-    setEditingProduct(null);
-    setIsModalOpen(true);
-  };
+  // Procesar una Nueva Venta (Facturación Caja 3 + Descuento automático de Bodega)
+  const handleCompleteSale = (saleRecord) => {
+    // 1. Descontar las cantidades de stock de los productos involucrados
+    let updatedProducts = [...products];
 
-  const handleOpenEditModal = (product) => {
-    setEditingProduct(product);
-    setIsModalOpen(true);
+    saleRecord.items.forEach((item) => {
+      updatedProducts = updatedProducts.map((p) => {
+        if (p.id === item.id) {
+          const remainingStock = Math.max(0, p.stock - item.cantidad);
+          return { ...p, stock: remainingStock, fechaActualizacion: new Date().toISOString() };
+        }
+        return p;
+      });
+    });
+
+    setProducts(updatedProducts);
+    saveProducts(updatedProducts);
+
+    // 2. Registrar la venta en la Caja 3
+    const updatedSales = [saleRecord, ...sales];
+    setSales(updatedSales);
+    saveSales(updatedSales);
+
+    alert(`✅ Venta registrada exitosamente en Caja 3.\nFacturado a: ${saleRecord.clienteNombre}\nTotal: $${saleRecord.total.toFixed(2)}\nStock en bodega actualizado.`);
   };
 
   return (
@@ -77,38 +95,59 @@ export default function App() {
       {/* Encabezado Principal */}
       <header className="main-header">
         <div className="header-brand">
-          <span className="brand-logo">📦</span>
+          <span className="brand-logo">📱</span>
           <div>
-            <h1>PuntoStock</h1>
-            <p className="brand-tagline">Sistema de Gestión de Inventario Local</p>
+            <h1>PuntoStock Repuestos</h1>
+            <p className="brand-tagline">Control de Inventario Multibodega y Caja 3</p>
           </div>
         </div>
 
-        <button className="btn btn-primary add-prod-btn" onClick={handleOpenAddModal}>
-          <span>➕</span> Nuevo Producto
-        </button>
+        <div className="header-actions">
+          <button className="btn btn-secondary" onClick={() => setIsCaja3ReportOpen(true)}>
+            📊 Cierre de Caja 3
+          </button>
+          <button className="btn btn-success" onClick={() => setIsSaleModalOpen(true)}>
+            ⚡ Facturar y Despachar (Caja 3)
+          </button>
+          <button className="btn btn-primary" onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }}>
+            ➕ Nuevo Repuesto
+          </button>
+        </div>
       </header>
 
       {/* Contenido Principal */}
       <main className="main-content">
-        {/* Tarjetas de Métricas de Resumen */}
+        {/* Tarjetas de Métricas */}
         <StatsCards products={products} />
 
-        {/* Tabla Principal de Productos */}
+        {/* Tabla de Inventario de Bodega */}
         <ProductTable
           products={products}
-          onEdit={handleOpenEditModal}
+          onEdit={(prod) => { setEditingProduct(prod); setIsProductModalOpen(true); }}
           onDelete={handleDeleteProduct}
           onUpdateStock={handleUpdateStock}
         />
       </main>
 
-      {/* Modal para Crear/Editar Producto */}
+      {/* Modales */}
       <ProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
         onSave={handleSaveProduct}
         productToEdit={editingProduct}
+      />
+
+      <NewSaleModal
+        isOpen={isSaleModalOpen}
+        onClose={() => setIsSaleModalOpen(false)}
+        products={products}
+        onCompleteSale={handleCompleteSale}
+      />
+
+      <Caja3ReportModal
+        isOpen={isCaja3ReportOpen}
+        onClose={() => setIsCaja3ReportOpen(false)}
+        sales={sales}
       />
     </div>
   );

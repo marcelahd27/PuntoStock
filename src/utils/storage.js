@@ -1,75 +1,93 @@
-// Clave única para identificar los datos de PuntoStock en el almacenamiento local del navegador
-const STORAGE_KEY = 'puntostock_products_v1';
+// Claves únicas de almacenamiento en localStorage
+const PRODUCTS_KEY = 'puntostock_products_v2';
+const SALES_KEY = 'puntostock_sales_v1';
 
-// Datos iniciales de demostración para que el sistema no empiece completamente vacío
+// Productos iniciales con Ubicación de Bodega especificada
 const DEFAULT_PRODUCTS = [
   {
     id: '1',
-    codigo: 'PROD-001',
-    nombre: 'Arroz Superior 1kg',
-    categoria: 'Abarrotes',
-    precio: 1.50,
-    stock: 25,
-    minStock: 5,
+    codigo: 'PAN-SAM-A54',
+    nombre: 'Pantalla Samsung Galaxy A54 5G OLED',
+    categoria: 'Pantallas',
+    bodega: 'Bodega 1 (Pantallas)',
+    precio: 45.00,
+    stock: 12,
+    minStock: 3,
     fechaActualizacion: new Date().toISOString()
   },
   {
     id: '2',
-    codigo: 'PROD-002',
-    nombre: 'Aceite Vegetal 1L',
-    categoria: 'Abarrotes',
-    precio: 3.20,
-    stock: 4, // Stock bajo para alerta
-    minStock: 10,
+    codigo: 'PAN-IPH-11',
+    nombre: 'Pantalla iPhone 11 Incell',
+    categoria: 'Pantallas',
+    bodega: 'Bodega 1 (Pantallas)',
+    precio: 35.00,
+    stock: 2, // Stock crítico
+    minStock: 5,
     fechaActualizacion: new Date().toISOString()
   },
   {
     id: '3',
-    codigo: 'PROD-003',
-    nombre: 'Detergente Multiusos 500g',
-    categoria: 'Limpieza',
-    precio: 2.10,
-    stock: 18,
+    codigo: 'PIN-XIA-RED10',
+    nombre: 'Pin de Carga Xiaomi Redmi Note 10',
+    categoria: 'Flex y Pinos',
+    bodega: 'Bodega 2 (Escritorio)',
+    precio: 4.50,
+    stock: 25,
     minStock: 8,
     fechaActualizacion: new Date().toISOString()
   },
   {
     id: '4',
-    codigo: 'PROD-004',
-    nombre: 'Leche Entera 1L',
-    categoria: 'Lácteos',
-    precio: 1.25,
-    stock: 2, // Stock crítico
-    minStock: 6,
+    codigo: 'BAT-SAM-S20',
+    nombre: 'Batería Samsung S20 FE',
+    categoria: 'Baterías',
+    bodega: 'Bodega 2 (Escritorio)',
+    precio: 15.00,
+    stock: 8,
+    minStock: 3,
     fechaActualizacion: new Date().toISOString()
   }
 ];
 
-/**
- * Obtener todos los productos guardados en el navegador.
- */
+// --- PRODUCTOS ---
 export const getProducts = () => {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = localStorage.getItem(PRODUCTS_KEY);
     if (!data) {
-      // Si es la primera vez que se abre la app, guardamos los datos de prueba
       saveProducts(DEFAULT_PRODUCTS);
       return DEFAULT_PRODUCTS;
     }
     return JSON.parse(data);
   } catch (error) {
-    console.error('Error al leer productos de localStorage:', error);
+    console.error('Error al leer productos:', error);
     return DEFAULT_PRODUCTS;
   }
 };
 
-/**
- * Guardar la lista completa de productos en el navegador.
- */
 export const saveProducts = (products) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
   } catch (error) {
-    console.error('Error al guardar productos en localStorage:', error);
+    console.error('Error al guardar productos:', error);
+  }
+};
+
+// --- VENTAS / CAJA 3 ---
+export const getSales = () => {
+  try {
+    const data = localStorage.getItem(SALES_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error al leer ventas:', error);
+    return [];
+  }
+};
+
+export const saveSales = (sales) => {
+  try {
+    localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+  } catch (error) {
+    console.error('Error al guardar ventas:', error);
   }
 };
