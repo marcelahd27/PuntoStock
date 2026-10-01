@@ -233,8 +233,13 @@ body {
   vertical-align: middle;
 }
 
-.custom-table tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+.table-row-clickable {
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.table-row-clickable:hover {
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .brand-tag {
@@ -298,18 +303,9 @@ body {
   text-align: center;
 }
 
-/* Badges */
-.badge {
-  padding: 0.3rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-block;
+.text-red {
+  color: var(--accent-red);
 }
-
-.badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-.badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
-.badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
 
 /* Buttons */
 .btn {
@@ -353,24 +349,6 @@ body {
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.action-buttons-group {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.action-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--card-border);
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.action-btn:hover {
   background: rgba(255, 255, 255, 0.15);
 }
 

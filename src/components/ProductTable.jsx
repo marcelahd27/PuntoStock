@@ -10,7 +10,7 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
   const calidades = ['Todas', ...new Set(products.map((p) => p.calidad || 'Standard'))];
   const bodegas = ['Todas', 'Bodega 1 (Pantallas)', 'Bodega 2 (Escritorio)'];
 
-  // Filtrado dinámico por búsqueda (modelo/marca), Marca, Calidad y Bodega
+  // Filtrado dinámico por búsqueda, Marca, Calidad y Bodega
   const filteredProducts = products.filter((product) => {
     const search = searchTerm.toLowerCase();
     const matchesSearch =
@@ -27,13 +27,13 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
 
   return (
     <div className="table-container-card">
-      {/* Controles de Búsqueda y Filtros por Marca, Calidad y Bodega */}
+      {/* Controles de Búsqueda y Filtros */}
       <div className="table-controls">
         <div className="search-box">
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Buscar modelo o marca (ej: A54, iPhone, Samsung)..."
+            placeholder="Buscar por marca o modelo (ej: A54, iPhone, Samsung)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -72,7 +72,7 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
         </div>
       </div>
 
-      {/* Tabla con la estructura requerida: Marca, Modelo, Calidad, Precio, Stock, Bodega */}
+      {/* Tabla limpia enfocada en los datos clave (Sin Estado ni Acciones) */}
       <div className="table-responsive">
         <table className="custom-table">
           <thead>
@@ -83,23 +83,29 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
               <th>Ubicación Bodega</th>
               <th>Precio ($)</th>
               <th>Stock</th>
-              <th>Estado</th>
-              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredProducts.length === 0 ? (
               <tr>
-                <td colSpan="8" className="empty-state">
-                  No hay repuestos registrados que coincidan con los filtros seleccionados.
+                <td colSpan="6" className="empty-state">
+                  No hay repuestos registrados que coincidan con los filtros.
                 </td>
               </tr>
             ) : (
               filteredProducts.map((product) => {
-                const isLowStock = Number(product.stock) <= Number(product.minStock || 3);
-
                 return (
-                  <tr key={product.id}>
+                  <tr 
+                    key={product.id}
+                    className="table-row-clickable"
+                    onClick={(e) => {
+                      // Solo abrir modal de editar si no se hace clic en los botones de + o -
+                      if (!e.target.classList.contains('btn-stock-quick')) {
+                        onEdit(product);
+                      }
+                    }}
+                    title="Haz clic en la fila para editar este repuesto"
+                  >
                     <td>
                       <span className="brand-tag">{product.marca}</span>
                     </td>
@@ -116,7 +122,7 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
                       ${Number(product.precio).toFixed(2)}
                     </td>
                     <td>
-                      <div className="stock-control">
+                      <div className="stock-control" onClick={(e) => e.stopPropagation()}>
                         <button
                           className="btn-stock-quick"
                           onClick={() => onUpdateStock(product.id, -1)}
@@ -124,40 +130,15 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
                         >
                           -
                         </button>
-                        <span className="stock-number">{product.stock}</span>
+                        <span className={`stock-number ${product.stock <= 0 ? 'text-red' : ''}`}>
+                          {product.stock}
+                        </span>
                         <button
                           className="btn-stock-quick"
                           onClick={() => onUpdateStock(product.id, 1)}
                           title="Sumar 1 unidad"
                         >
                           +
-                        </button>
-                      </div>
-                    </td>
-                    <td>
-                      {product.stock <= 0 ? (
-                        <span className="badge badge-danger">❌ Agotado</span>
-                      ) : isLowStock ? (
-                        <span className="badge badge-warning">⚡ Stock Bajo</span>
-                      ) : (
-                        <span className="badge badge-success">✓ En Bodega</span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="action-buttons-group">
-                        <button
-                          className="action-btn edit-btn"
-                          onClick={() => onEdit(product)}
-                          title="Editar Repuesto"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          className="action-btn delete-btn"
-                          onClick={() => onDelete(product.id)}
-                          title="Eliminar Repuesto"
-                        >
-                          🗑️
                         </button>
                       </div>
                     </td>
