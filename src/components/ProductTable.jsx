@@ -2,77 +2,87 @@ import React, { useState } from 'react';
 
 export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todas');
+  const [selectedMarca, setSelectedMarca] = useState('Todas');
+  const [selectedCalidad, setSelectedCalidad] = useState('Todas');
   const [selectedBodega, setSelectedBodega] = useState('Todas');
 
-  const categories = ['Todas', ...new Set(products.map((p) => p.categoria || 'General'))];
+  const marcas = ['Todas', ...new Set(products.map((p) => p.marca || 'Otra'))];
+  const calidades = ['Todas', ...new Set(products.map((p) => p.calidad || 'Standard'))];
   const bodegas = ['Todas', 'Bodega 1 (Pantallas)', 'Bodega 2 (Escritorio)'];
 
-  // Filtrado dinámico por búsqueda, categoría y bodega
+  // Filtrado dinámico por búsqueda (modelo/marca), Marca, Calidad y Bodega
   const filteredProducts = products.filter((product) => {
+    const search = searchTerm.toLowerCase();
     const matchesSearch =
-      product.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+      (product.modelo || '').toLowerCase().includes(search) ||
+      (product.marca || '').toLowerCase().includes(search) ||
+      (product.codigo || '').toLowerCase().includes(search);
 
-    const matchesCategory =
-      selectedCategory === 'Todas' || product.categoria === selectedCategory;
+    const matchesMarca = selectedMarca === 'Todas' || product.marca === selectedMarca;
+    const matchesCalidad = selectedCalidad === 'Todas' || product.calidad === selectedCalidad;
+    const matchesBodega = selectedBodega === 'Todas' || product.bodega === selectedBodega;
 
-    const matchesBodega =
-      selectedBodega === 'Todas' || product.bodega === selectedBodega;
-
-    return matchesSearch && matchesCategory && matchesBodega;
+    return matchesSearch && matchesMarca && matchesCalidad && matchesBodega;
   });
 
   return (
     <div className="table-container-card">
+      {/* Controles de Búsqueda y Filtros por Marca, Calidad y Bodega */}
       <div className="table-controls">
         <div className="search-box">
           <span className="search-icon">🔍</span>
           <input
             type="text"
-            placeholder="Buscar por código o repuesto..."
+            placeholder="Buscar modelo o marca (ej: A54, iPhone, Samsung)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="filter-group">
+          {/* Filtro Marca */}
           <div className="filter-box">
-            <label>Ubicación:</label>
-            <select
-              value={selectedBodega}
-              onChange={(e) => setSelectedBodega(e.target.value)}
-            >
-              {bodegas.map((b) => (
-                <option key={b} value={b}>{b}</option>
+            <label>Marca:</label>
+            <select value={selectedMarca} onChange={(e) => setSelectedMarca(e.target.value)}>
+              {marcas.map((m) => (
+                <option key={m} value={m}>{m}</option>
               ))}
             </select>
           </div>
 
+          {/* Filtro Calidad */}
           <div className="filter-box">
-            <label>Categoría:</label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+            <label>Calidad:</label>
+            <select value={selectedCalidad} onChange={(e) => setSelectedCalidad(e.target.value)}>
+              {calidades.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Filtro Bodega */}
+          <div className="filter-box">
+            <label>Ubicación:</label>
+            <select value={selectedBodega} onChange={(e) => setSelectedBodega(e.target.value)}>
+              {bodegas.map((b) => (
+                <option key={b} value={b}>{b}</option>
               ))}
             </select>
           </div>
         </div>
       </div>
 
+      {/* Tabla con la estructura requerida: Marca, Modelo, Calidad, Precio, Stock, Bodega */}
       <div className="table-responsive">
         <table className="custom-table">
           <thead>
             <tr>
-              <th>Código</th>
-              <th>Repuesto</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Calidad</th>
               <th>Ubicación Bodega</th>
-              <th>Categoría</th>
-              <th>Precio</th>
-              <th>Stock Bodega</th>
+              <th>Precio ($)</th>
+              <th>Stock</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -81,27 +91,26 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
             {filteredProducts.length === 0 ? (
               <tr>
                 <td colSpan="8" className="empty-state">
-                  No se encontraron repuestos en bodega que coincidan con la búsqueda.
+                  No hay repuestos registrados que coincidan con los filtros seleccionados.
                 </td>
               </tr>
             ) : (
               filteredProducts.map((product) => {
                 const isLowStock = Number(product.stock) <= Number(product.minStock || 3);
-                const isCriticalStock = Number(product.stock) <= 1;
 
                 return (
                   <tr key={product.id}>
                     <td>
-                      <span className="code-badge">{product.codigo}</span>
+                      <span className="brand-tag">{product.marca}</span>
                     </td>
                     <td>
-                      <strong className="product-name">{product.nombre}</strong>
+                      <strong className="product-name">{product.modelo}</strong>
                     </td>
                     <td>
-                      <span className="location-tag">{product.bodega || 'Bodega 1 (Pantallas)'}</span>
+                      <span className="quality-badge">{product.calidad}</span>
                     </td>
                     <td>
-                      <span className="category-pill">{product.categoria}</span>
+                      <span className="location-tag">{product.bodega}</span>
                     </td>
                     <td className="price-cell">
                       ${Number(product.precio).toFixed(2)}
@@ -128,8 +137,6 @@ export const ProductTable = ({ products, onEdit, onDelete, onUpdateStock }) => {
                     <td>
                       {product.stock <= 0 ? (
                         <span className="badge badge-danger">❌ Agotado</span>
-                      ) : isCriticalStock ? (
-                        <span className="badge badge-danger">⚠️ Última Unidad</span>
                       ) : isLowStock ? (
                         <span className="badge badge-warning">⚡ Stock Bajo</span>
                       ) : (

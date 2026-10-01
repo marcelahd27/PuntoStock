@@ -2,24 +2,25 @@ import React, { useState, useEffect } from 'react';
 
 export const ProductModal = ({ isOpen, onClose, onSave, productToEdit }) => {
   const [formData, setFormData] = useState({
-    codigo: '',
-    nombre: '',
-    categoria: 'Pantallas',
+    marca: 'Samsung',
+    modelo: '',
+    calidad: 'OLED',
     bodega: 'Bodega 1 (Pantallas)',
     precio: '',
     stock: '',
     minStock: 3
   });
 
-  const categories = ['Pantallas', 'Flex y Pinos', 'Baterías', 'Cristales / Glass', 'Cámaras', 'General'];
+  const marcasComunes = ['Samsung', 'Apple / iPhone', 'Xiaomi', 'Motorola', 'Huawei', 'Honor', 'ZTE', 'Oppo', 'Infinix', 'Otra'];
+  const calidadesComunes = ['OLED', 'Incell', 'AMOLED Original', 'TFT', 'AAA', 'Original Desarmada', 'OEM'];
   const bodegas = ['Bodega 1 (Pantallas)', 'Bodega 2 (Escritorio)'];
 
   useEffect(() => {
     if (productToEdit) {
       setFormData({
-        codigo: productToEdit.codigo || '',
-        nombre: productToEdit.nombre || '',
-        categoria: productToEdit.categoria || 'Pantallas',
+        marca: productToEdit.marca || 'Samsung',
+        modelo: productToEdit.modelo || '',
+        calidad: productToEdit.calidad || 'OLED',
         bodega: productToEdit.bodega || 'Bodega 1 (Pantallas)',
         precio: productToEdit.precio || '',
         stock: productToEdit.stock || '',
@@ -27,9 +28,9 @@ export const ProductModal = ({ isOpen, onClose, onSave, productToEdit }) => {
       });
     } else {
       setFormData({
-        codigo: `REP-${Math.floor(100 + Math.random() * 900)}`,
-        nombre: '',
-        categoria: 'Pantallas',
+        marca: 'Samsung',
+        modelo: '',
+        calidad: 'OLED',
         bodega: 'Bodega 1 (Pantallas)',
         precio: '',
         stock: '',
@@ -42,13 +43,16 @@ export const ProductModal = ({ isOpen, onClose, onSave, productToEdit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.nombre.trim() || formData.precio === '' || formData.stock === '') {
-      alert('Por favor completa todos los campos requeridos.');
+    if (!formData.modelo.trim() || formData.precio === '' || formData.stock === '') {
+      alert('Por favor ingresa el Modelo, Precio y Stock.');
       return;
     }
 
+    const codigoGenerado = `REP-${formData.marca.substring(0, 3).toUpperCase()}-${formData.modelo.replace(/\s+/g, '').substring(0, 5).toUpperCase()}`;
+
     onSave({
       ...formData,
+      codigo: productToEdit?.codigo || codigoGenerado,
       precio: parseFloat(formData.precio),
       stock: parseInt(formData.stock, 10),
       minStock: parseInt(formData.minStock, 10)
@@ -61,23 +65,53 @@ export const ProductModal = ({ isOpen, onClose, onSave, productToEdit }) => {
     <div className="modal-backdrop">
       <div className="modal-content">
         <div className="modal-header">
-          <h2>{productToEdit ? '✏️ Editar Repuesto' : '✨ Nuevo Repuesto'}</h2>
+          <h2>{productToEdit ? '✏️ Editar Repuesto' : '✨ Registrar Nuevo Repuesto'}</h2>
           <button className="close-btn" onClick={onClose}>&times;</button>
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-row">
+            {/* Campo 1: MARCA */}
             <div className="form-group">
-              <label>Código / Referencia</label>
+              <label>1. Marca</label>
+              <select
+                value={formData.marca}
+                onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+              >
+                {marcasComunes.map((m) => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Campo 2: MODELO */}
+            <div className="form-group">
+              <label>2. Modelo</label>
               <input
                 type="text"
-                value={formData.codigo}
-                onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
-                placeholder="Ej: PAN-SAM-A54"
+                value={formData.modelo}
+                onChange={(e) => setFormData({ ...formData, modelo: e.target.value })}
+                placeholder="Ej: Galaxy A54 5G / iPhone 11"
                 required
               />
             </div>
+          </div>
 
+          <div className="form-row">
+            {/* Campo 3: CALIDAD */}
+            <div className="form-group">
+              <label>3. Calidad del Repuesto</label>
+              <select
+                value={formData.calidad}
+                onChange={(e) => setFormData({ ...formData, calidad: e.target.value })}
+              >
+                {calidadesComunes.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Ubicación de Bodega */}
             <div className="form-group">
               <label>Ubicación de Bodega</label>
               <select
@@ -92,33 +126,9 @@ export const ProductModal = ({ isOpen, onClose, onSave, productToEdit }) => {
           </div>
 
           <div className="form-row">
+            {/* Campo 4: PRECIO */}
             <div className="form-group">
-              <label>Nombre del Repuesto</label>
-              <input
-                type="text"
-                value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                placeholder="Ej: Pantalla Samsung A54 OLED"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Categoría</label>
-              <select
-                value={formData.categoria}
-                onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>Precio Unitario ($)</label>
+              <label>4. Precio Unitario ($)</label>
               <input
                 type="number"
                 step="0.01"
@@ -130,26 +140,15 @@ export const ProductModal = ({ isOpen, onClose, onSave, productToEdit }) => {
               />
             </div>
 
+            {/* Stock */}
             <div className="form-group">
-              <label>Stock Inicial</label>
+              <label>Cantidad en Stock</label>
               <input
                 type="number"
                 min="0"
                 value={formData.stock}
                 onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                 placeholder="0"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Stock Mínimo (Alerta)</label>
-              <input
-                type="number"
-                min="1"
-                value={formData.minStock}
-                onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
-                placeholder="3"
                 required
               />
             </div>
@@ -160,7 +159,7 @@ export const ProductModal = ({ isOpen, onClose, onSave, productToEdit }) => {
               Cancelar
             </button>
             <button type="submit" className="btn btn-primary">
-              {productToEdit ? 'Guardar Cambios' : 'Guardar Repuesto'}
+              {productToEdit ? 'Guardar Cambios' : 'Guardar en Inventario'}
             </button>
           </div>
         </form>

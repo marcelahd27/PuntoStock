@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 
 export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
-  const [tipoComprobante, setTipoComprobante] = useState('Consumidor Final'); // 'Consumidor Final' o 'Crédito Fiscal'
-  const [clienteNombre, setClienteNombre] = useState('Cliente Vacio / Consumidor Final');
+  const [tipoComprobante, setTipoComprobante] = useState('Consumidor Final');
+  const [clienteNombre, setClienteNombre] = useState('Consumidor Final');
   const [nrcNit, setNrcNit] = useState('');
   
-  // Lista de items agregados a la nota de venta
   const [cart, setCart] = useState([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [cantidad, setCantidad] = useState(1);
@@ -19,11 +18,10 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
     if (!prod) return;
 
     if (prod.stock <= 0) {
-      alert(`⚠️ El repuesto "${prod.nombre}" no tiene stock disponible en ${prod.bodega}.`);
+      alert(`⚠️ El repuesto "${prod.marca} ${prod.modelo}" no tiene stock en ${prod.bodega}.`);
       return;
     }
 
-    // Verificar si ya está en el carrito
     const existingIndex = cart.findIndex((item) => item.id === prod.id);
     if (existingIndex >= 0) {
       const currentQty = cart[existingIndex].cantidad;
@@ -44,7 +42,9 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
         {
           id: prod.id,
           codigo: prod.codigo,
-          nombre: prod.nombre,
+          marca: prod.marca,
+          modelo: prod.modelo,
+          calidad: prod.calidad,
           bodega: prod.bodega,
           precio: prod.precio,
           cantidad: cantidad
@@ -52,7 +52,6 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
       ]);
     }
 
-    // Reset selección rápida
     setSelectedProductId('');
     setCantidad(1);
   };
@@ -83,8 +82,6 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
     };
 
     onCompleteSale(saleRecord);
-    
-    // Limpiar modal
     setCart([]);
     setClienteNombre('Consumidor Final');
     setNrcNit('');
@@ -100,7 +97,6 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
         </div>
 
         <form onSubmit={handleSubmitVenta} className="modal-form">
-          {/* Tipo de Documento Fiscal */}
           <div className="form-row card-sub-bg">
             <div className="form-group">
               <label><strong>Tipo de Comprobante / Factura:</strong></label>
@@ -130,7 +126,6 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
             </div>
           </div>
 
-          {/* Datos del Cliente */}
           <div className="form-row">
             <div className="form-group">
               <label>Nombre del Cliente / Empresa</label>
@@ -138,19 +133,19 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
                 type="text"
                 value={clienteNombre}
                 onChange={(e) => setClienteNombre(e.target.value)}
-                placeholder={tipoComprobante === 'Crédito Fiscal' ? 'Razón Social o Nombre' : 'Nombre o Consumidor Final'}
+                placeholder={tipoComprobante === 'Crédito Fiscal' ? 'Razón Social' : 'Consumidor Final'}
                 required
               />
             </div>
 
             {tipoComprobante === 'Crédito Fiscal' && (
               <div className="form-group">
-                <label>NRC / NIT o DUI (Requerido para CCF)</label>
+                <label>NRC / NIT (Requerido para CCF)</label>
                 <input
                   type="text"
                   value={nrcNit}
                   onChange={(e) => setNrcNit(e.target.value)}
-                  placeholder="Ej: 123456-7 / 0614-000000-000-0"
+                  placeholder="Ej: 123456-7"
                   required
                 />
               </div>
@@ -159,10 +154,10 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
 
           <hr className="divider" />
 
-          {/* Selector de Repuestos */}
+          {/* Selector con formato Marca + Modelo + Calidad */}
           <div className="form-row align-end">
             <div className="form-group flex-2">
-              <label>Seleccionar Repuesto disponible:</label>
+              <label>Seleccionar Repuesto por Marca / Modelo / Calidad:</label>
               <select
                 value={selectedProductId}
                 onChange={(e) => setSelectedProductId(e.target.value)}
@@ -170,7 +165,7 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
                 <option value="">-- Elige repuesto de bodega --</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id} disabled={p.stock <= 0}>
-                    {p.codigo} - {p.nombre} ({p.bodega}) | Stock: {p.stock} | ${Number(p.precio).toFixed(2)}
+                    [{p.marca}] {p.modelo} ({p.calidad}) | {p.bodega} | Stock: {p.stock} | ${Number(p.precio).toFixed(2)}
                   </option>
                 ))}
               </select>
@@ -191,18 +186,18 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
             </button>
           </div>
 
-          {/* Detalle del Pedido */}
           <div className="cart-summary-table">
-            <h4>Detalle de la Venta (Descuento automático de Bodega):</h4>
+            <h4>Detalle del Repuesto a Despachar:</h4>
             {cart.length === 0 ? (
               <p className="empty-cart-msg">No has seleccionado ningún repuesto aún.</p>
             ) : (
               <table className="mini-table">
                 <thead>
                   <tr>
-                    <th>Código</th>
-                    <th>Repuesto</th>
-                    <th>Ubicación</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Calidad</th>
+                    <th>Bodega</th>
                     <th>Cant.</th>
                     <th>Precio</th>
                     <th>Subtotal</th>
@@ -212,8 +207,9 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
                 <tbody>
                   {cart.map((item) => (
                     <tr key={item.id}>
-                      <td>{item.codigo}</td>
-                      <td>{item.nombre}</td>
+                      <td><strong>{item.marca}</strong></td>
+                      <td>{item.modelo}</td>
+                      <td><span className="quality-badge">{item.calidad}</span></td>
                       <td><span className="location-tag">{item.bodega}</span></td>
                       <td>{item.cantidad}</td>
                       <td>${item.precio.toFixed(2)}</td>
@@ -235,7 +231,7 @@ export const NewSaleModal = ({ isOpen, onClose, products, onCompleteSale }) => {
           </div>
 
           <div className="sale-total-banner">
-            <span>Total a Facturar (Caja 3):</span>
+            <span>Total a Registrar (Caja 3):</span>
             <strong className="total-amount">${totalVenta.toFixed(2)}</strong>
           </div>
 
